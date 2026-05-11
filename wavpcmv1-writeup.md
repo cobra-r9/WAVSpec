@@ -2,7 +2,7 @@
 
 A minimal C program that synthesizes a pure sine wave, encodes it as a valid WAV file, plays it via ALSA, and removes the file — all from scratch with no audio libraries.
 
----
+
 
 ## Table of Contents
 
@@ -12,7 +12,7 @@ A minimal C program that synthesizes a pure sine wave, encodes it as a valid WAV
 - [Build and Run](#build-and-run)
 - [Concepts](#concepts)
 
----
+
 
 ## Overview
 
@@ -20,7 +20,7 @@ Most audio programs rely on libraries like libsoundio, PortAudio, or SDL_mixer. 
 
 The audio produced is a pure sine tone — a single frequency with no harmonics, no noise. It is the simplest possible periodic waveform.
 
----
+
 
 ## The WAV File Format
 
@@ -65,7 +65,7 @@ Human hearing tops out at roughly 20,000 Hz. The **Nyquist–Shannon sampling th
 
 Each sample is a signed 16-bit integer, giving a range of **−32768 to 32767**. This is 16-bit depth — 65536 discrete amplitude levels. The more levels, the finer the amplitude resolution, and the lower the quantization noise. CD audio uses 16-bit. Studio recordings often use 24-bit. 8-bit sounds noticeably grainy.
 
----
+
 
 ## Code Walkthrough
 
@@ -81,7 +81,7 @@ Each sample is a signed 16-bit integer, giving a range of **−32768 to 32767**.
 
 `stdint.h` is critical here. Plain `int` and `short` have implementation-defined sizes. The WAV format is a binary specification with exact byte counts at exact offsets. Using `uint32_t` guarantees 4 bytes and `uint16_t` guarantees 2 bytes on every platform.
 
----
+
 
 ### Constants
 
@@ -97,7 +97,7 @@ static const char  *OUTPUT_FILE  = "out.wav";
 
 `OUTPUT_FILE` is a pointer to a string literal. The string `"out.wav"` lives in the `.rodata` section (read-only data). The pointer itself is const, and the data it points to is read-only memory — mutating it would be undefined behavior.
 
----
+
 
 ### The WAV Header Struct
 
@@ -134,7 +134,7 @@ strcpy(hdr->riff_tag, "RIFF");     // WRONG — writes 5 bytes, overflows into c
 
 `strcpy` always copies the null terminator `\0` as well. `"RIFF"` is 5 bytes including `\0`. Writing 5 bytes into a 4-byte field overflows into the next field (`chunk_size`), silently corrupting it. `memcpy` lets you specify exactly 4 bytes — no null terminator, no overflow.
 
----
+
 
 ### Header Construction
 
@@ -178,7 +178,7 @@ static void make_header(int num_samples, WAVHeader *hdr) {
 
 `chunk_size = 36 + data_size` because the 36 accounts for: the `"WAVE"` tag (4), the `"fmt "` tag (4), `fmt_subchunk_size` field (4), the 16 bytes of fmt body (16), the `"data"` tag (4), and `data_subchunk_size` field (4). That totals exactly 36 bytes of overhead between the chunk_size field and the raw samples.
 
----
+
 
 ### Sample Generation
 
@@ -244,7 +244,7 @@ if (i > num_samples - 100)
 
 When `i = num_samples - 100`, `fade = 100/100 = 1.0` (no change). When `i = num_samples - 1`, `fade = 1/100 = 0.01` (nearly silent). This ramps amplitude smoothly to near-zero, eliminating the click.
 
----
+
 
 ### File Writing
 
@@ -279,7 +279,7 @@ static int write_wav(const char *path, const WAVHeader *hdr,
 
 **`fclose` on error path:** The file handle must be closed even when the write fails. Omitting it leaks a file descriptor. On Linux the default fd limit is 1024 — leaking them in a loop would eventually cause `fopen` to return `NULL` with `Too many open files`.
 
----
+
 
 ### Playback and Cleanup
 
@@ -297,7 +297,7 @@ static void play_and_remove(const char *path) {
 
 **`system()`:** Forks a shell (`/bin/sh -c`), passes the command string to it, and blocks until the shell exits. It is not the most efficient approach — you could use `fork`/`exec`/`waitpid` directly — but it is simple and correct for this use case.
 
----
+
 
 ### main()
 
@@ -328,7 +328,7 @@ int main(void) {
 
 **`WAVHeader hdr` on the stack:** The header is only 44 bytes. Stack allocation is fine and correct here — no reason to `malloc` it. It is passed to `make_header` by pointer so the function can populate its fields in-place.
 
----
+
 
 ## Build and Run
 
@@ -345,7 +345,7 @@ For strict compilation:
 gcc sine.c -o sine -lm -Wall -Wextra -pedantic -std=c11
 ```
 
----
+
 
 ## Concepts
 

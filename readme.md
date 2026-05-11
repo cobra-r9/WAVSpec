@@ -1,6 +1,6 @@
 # The WAV File Format — Exhaustive Reference
 
----
+
 
 ## 1. Origins and Lineage
 
@@ -10,7 +10,7 @@ Back in the late 1980s, Electronic Arts came up with a general container file fo
 
 This Intel heritage is why WAV is **little-endian throughout** — the least significant byte comes first in every multi-byte field. This matters when parsing or constructing the binary manually.
 
----
+
 
 ## 2. What RIFF Is
 
@@ -34,7 +34,7 @@ chunkSize gives the size of the valid data in the chunk. The data is always padd
 
 The only chunks that may contain subchunks are the RIFF file chunk `'RIFF'` and the list chunk `'LIST'`. All other chunks may contain only data. A RIFF file is one RIFF chunk. All other chunks and subchunks in the file are contained within this chunk. [edn](https://www.edn.com/how-audio-codecs-work-part-2)
 
----
+
 
 ## 3. The Canonical WAV Structure
 
@@ -61,7 +61,7 @@ File on disk:
 └──────────────────────────────────────────────────────────┘
 ```
 
----
+
 
 ## 4. Full Header Byte Map
 
@@ -165,7 +165,7 @@ Total overhead       = 36 bytes
 
 The 8 excluded bytes are `"RIFF"` (4) + `chunk_size` itself (4). The RIFF spec defines chunk_size as counting everything **after** those two fields.
 
----
+
 
 ### Field 3 — `wave_form[4]` — offset 8
 
@@ -178,7 +178,7 @@ At offset 8 there is a signature of Waveform Audio RIFF Type WAVE (hex: 57, 41, 
 
 This distinguishes a WAV from other RIFF subtypes. The same RIFF container is used by AVI video (`"AVI "`), CD audio (`"CDXA"`), and others. `"WAVE"` is the identifier that says this RIFF file specifically contains waveform audio.
 
----
+
 
 ### Field 4 — `fmt_tag[4]` — offset 12
 
@@ -189,7 +189,7 @@ memcpy(hdr->fmt_tag, "fmt ", 4);  // trailing space is mandatory
 
 The trailing space (0x20) is part of the FourCC spec — FourCC codes are always exactly 4 bytes, padded with spaces if the identifier is shorter. `"fmt"` is 3 characters, so it becomes `"fmt "`. Parsers match the full 4-byte sequence including the space.
 
----
+
 
 ### Field 5 — `fmt_subchunk_size` — offset 16
 
@@ -203,7 +203,7 @@ The 16 counts only the body fields of the fmt chunk — the 6 fields from `audio
 
 For non-PCM formats this value grows because extra fields are appended. For `WAVE_FORMAT_EXTENSIBLE` it is 40.
 
----
+
 
 ### Field 6 — `audio_format` — offset 20
 
@@ -228,7 +228,7 @@ While WAV files can store numerous formats of data, the common vernacular usage 
 
 PCM stands for Pulse Code Modulation. Invented at Bell Labs, it is the direct digital representation of an analog signal. An ADC (Analog-to-Digital Converter) samples the air pressure level at regular time intervals and quantizes each measurement to the nearest integer in the available range. No compression, no prediction, no transformation — just raw amplitude snapshots.
 
----
+
 
 ### Field 7 — `num_channels` — offset 22
 
@@ -265,7 +265,7 @@ for (int i = 0; i < num_frames; i++) {
 }
 ```
 
----
+
 
 ### Field 8 — `sample_rate` — offset 24
 
@@ -287,7 +287,7 @@ Common values and their use cases:
 
 **Why 44100 specifically:** The Nyquist–Shannon theorem requires a sample rate of at least 2× the highest frequency to be reproduced. Human hearing caps at ~20,000 Hz, so the minimum is ~40,000 Hz. The 44100 figure traces back to early digital audio stored on video tape — NTSC video runs at 30 frames/sec with 245 scanlines per field × 3 samples per line × 2 fields = 44,100. It fit neatly and provided margin above 40,000.
 
----
+
 
 ### Field 9 — `byte_rate` — offset 28
 
@@ -304,7 +304,7 @@ This tells the player how many bytes it will consume per second of playback. Use
 - Seeking to a time position: `seek_offset = byte_rate × time_seconds`
 - Estimating playback duration without counting samples
 
----
+
 
 ### Field 10 — `block_align` — offset 32
 
@@ -323,7 +323,7 @@ This is the size in bytes of one **complete sample frame** — all channels at a
 | Stereo 16-bit | 4 |
 | 5.1 24-bit | 18 |
 
----
+
 
 ### Field 11 — `bits_per_sample` — offset 34
 
@@ -352,7 +352,7 @@ uint8_t silence_8bit = 128;
 int16_t silence_16bit = 0;
 ```
 
----
+
 
 ### Field 12 — `data_tag[4]` — offset 36
 
@@ -363,7 +363,7 @@ memcpy(hdr->data_tag, "data", 4);
 
 The chunk ID for the data sub-chunk. Everything following the next 4-byte size field is raw audio. A conforming WAV parser should be prepared for optional chunks between `fmt ` and `data` (like `fact`, `cue `, `LIST`) and skip them until it finds `"data"`. Assuming `data` always starts at offset 36 is a common but incorrect assumption.
 
----
+
 
 ### Field 13 — `data_subchunk_size` — offset 40
 
@@ -374,7 +374,7 @@ hdr->data_subchunk_size = num_samples * sizeof(int16_t);
 
 Subchunk2Size = NumSamples × NumChannels × BitsPerSample/8. This is the number of bytes in the data. You can also think of this as the size of the read of the subchunk following this number. [sapp](http://soundfile.sapp.org/doc/WaveFormat/)
 
----
+
 
 ## 6. The Raw Sample Data
 
@@ -420,7 +420,7 @@ samples[i] = (int16_t)(32767.0 * sin(...));
 
 The overflow wraps via two's complement to `-32768` — a sudden massive negative spike at every positive peak, audible as a harsh crackling distortion.
 
----
+
 
 ## 7. Hex Dump — Real File Example
 
@@ -442,7 +442,7 @@ blk=4  bps=16 d  a  t  a   data_size
 
 Reading the hex: `22 56 00 00` stored little-endian = `0x00005622` = 22050 decimal (22050 Hz sample rate). `88 58 01 00` = `0x00015888` = 88200 = `22050 × 2 × 2` (stereo 16-bit byte rate).
 
----
+
 
 ## 8. Beyond Canonical — Optional Chunks
 
@@ -477,7 +477,7 @@ RIFF files may include a `LIST` chunk with a HeaderID of `INFO`. [Daubnet](https
 
 To align RIFF chunks to certain boundaries (e.g., 2048 bytes for CD-ROMs) the RIFF specification includes a JUNK chunk. Its contents are to be skipped when reading. [Daubnet](https://www.daubnet.com/en/file-format-riff) Used for padding — some applications reserve space in the header to rewrite size fields later without shifting data.
 
----
+
 
 ## 9. WAVE_FORMAT_EXTENSIBLE
 
@@ -507,7 +507,7 @@ typedef struct {
 
 The extension has one field which declares the number of valid bits per sample (wValidBitsPerSample). Another field (dwChannelMask) contains bits which indicate the mapping from channels to loudspeaker positions. The last field (SubFormat) is a 16-byte globally unique identifier (GUID). [Wavefilegem](https://wavefilegem.com/how_wave_files_work.html)
 
----
+
 
 ## 10. Size Arithmetic — Full Derivation
 
@@ -529,7 +529,7 @@ chunk_size field = 88244 - 8          = 88236
                  = 36 + 88200 ✓
 ```
 
----
+
 
 ## 11. What Happens If You Get It Wrong
 
@@ -547,7 +547,7 @@ Common mistakes and their audible/structural consequences:
 | Forgetting odd-byte padding after data | non-compliant file, some strict parsers reject it |
 | `SampleRate` mismatch with actual data | plays at wrong pitch and speed |
 
----
+
 
 ## 12. The Struct in Full With Derivations
 
